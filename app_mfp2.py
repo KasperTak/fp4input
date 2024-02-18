@@ -49,115 +49,119 @@ with tab1:
    # studieschuldtabel['Debetrente'] = studieschuldtabel['Debetrente'].apply(lambda x: f"{x:.3f}".replace('.',','))
     
     with column1:
-        st.subheader("Partnerschap")
-        
-    # input vanuit gast
-        gez_ink = st.number_input("_Gezamenlijk bruto jaarinkomen_", 0,999999999,0)
-        toetsinkomen = 500 * math.floor(gez_ink/500)
-        #st.write(f"Het gezamenlijk brutojaarinkomen is €{gez_ink}")
-    # leeftijd nodig voor AOW-leeftijd: JA/NEE    
-        leeftijd = st.number_input("_Leeftijd oudste partner_",0,120,18)
-    #    st.write(f"De oudste partner is {leeftijd} jaar.")
-        waarde_woning = st.number_input("_Marktwaarde woning_",0,99999999,250000)
-
-        st.write("---------------------------")
+        if bestand is not None:
+            st.subheader("Partnerschap")
+            
+        # input vanuit gast
+            gez_ink = st.number_input("_Gezamenlijk bruto jaarinkomen_", 0,999999999,0)
+            toetsinkomen = 500 * math.floor(gez_ink/500)
+            #st.write(f"Het gezamenlijk brutojaarinkomen is €{gez_ink}")
+        # leeftijd nodig voor AOW-leeftijd: JA/NEE    
+            leeftijd = st.number_input("_Leeftijd oudste partner_",0,120,18)
+        #    st.write(f"De oudste partner is {leeftijd} jaar.")
+            waarde_woning = st.number_input("_Marktwaarde woning_",0,99999999,250000)
+    
+            st.write("---------------------------")
 
     
     with column2:
-        st.subheader("Financiering")
-    # Rente nodig die ze willen. Als tijd <= 10 jaar: 5%
-        rentepercentage = st.number_input("_Rentepercentage zonder procentteken_",step=0.01,value=5.00)
-        #st.write(f"De rente vastzetten op een hoogte van {rentepercentage:.3f}%")
-    # tijdsperiode naar wensen. 
-        tijdsperiode = st.selectbox("_Looptijd in maanden_",['120','180','240','300','360'])
-        #st.write(f"De looptijd voor de hypotheek is {tijdsperiode} maanden.")
-    # Als tijd < 10 dan toetsrente van 5%    
-        if tijdsperiode == '120':
-            debetrente = 5
-            debetrente = "{:,.3f}".format(debetrente)
-            debetrente = debetrente.replace('.', ',')
-        #    st.write(f"De debetrente is {debetrente}%")
-    # Als de tijd groter is dan 10 jaar, dan de werkelijke rente    
-        else:
-            if rentepercentage < 1.50:
-                debetrente = "1,500"
-            elif rentepercentage > 6.501:
-                debetrente = "6,501"
-            else:
-                debetrente = math.floor(rentepercentage+0.5)
+        if bestand is not None:
+            st.subheader("Financiering")
+        # Rente nodig die ze willen. Als tijd <= 10 jaar: 5%
+            rentepercentage = st.number_input("_Rentepercentage zonder procentteken_",step=0.01,value=5.00)
+            #st.write(f"De rente vastzetten op een hoogte van {rentepercentage:.3f}%")
+        # tijdsperiode naar wensen. 
+            tijdsperiode = st.selectbox("_Looptijd in maanden_",['120','180','240','300','360'])
+            #st.write(f"De looptijd voor de hypotheek is {tijdsperiode} maanden.")
+        # Als tijd < 10 dan toetsrente van 5%    
+            if tijdsperiode == '120':
+                debetrente = 5
                 debetrente = "{:,.3f}".format(debetrente)
                 debetrente = debetrente.replace('.', ',')
+            #    st.write(f"De debetrente is {debetrente}%")
+        # Als de tijd groter is dan 10 jaar, dan de werkelijke rente    
+            else:
+                if rentepercentage < 1.50:
+                    debetrente = "1,500"
+                elif rentepercentage > 6.501:
+                    debetrente = "6,501"
+                else:
+                    debetrente = math.floor(rentepercentage+0.5)
+                    debetrente = "{:,.3f}".format(debetrente)
+                    debetrente = debetrente.replace('.', ',')
+                    
+               # st.write(f"De debetrente is {debetrente}%")
+    
+        # leeftijd controleren voor juiste financieringslastpercentage.
+            if leeftijd < AOW_leeftijd:
+                woonquote = VOOR_AOW.loc[VOOR_AOW['toetsinkomen'] == toetsinkomen, debetrente].values[0]
+                #st.write(f"Het financieringslastpercentage is {woonquote}")
+            else:
+                woonquote = NA_AOW.loc[NA_AOW['toetsinkomen'] == toetsinkomen, debetrente].values[0]
+                #st.write(f"Het financieringslastpercentage is {woonquote}")
                 
-           # st.write(f"De debetrente is {debetrente}%")
-
-    # leeftijd controleren voor juiste financieringslastpercentage.
-        if leeftijd < AOW_leeftijd:
-            woonquote = VOOR_AOW.loc[VOOR_AOW['toetsinkomen'] == toetsinkomen, debetrente].values[0]
-            #st.write(f"Het financieringslastpercentage is {woonquote}")
-        else:
-            woonquote = NA_AOW.loc[NA_AOW['toetsinkomen'] == toetsinkomen, debetrente].values[0]
-            #st.write(f"Het financieringslastpercentage is {woonquote}")
+            finan_ink = gez_ink * woonquote
+            #st.write(f"Hiermee komt het financieringslastinkomen op €{finan_ink:.2f}")
             
-        finan_ink = gez_ink * woonquote
-        #st.write(f"Hiermee komt het financieringslastinkomen op €{finan_ink:.2f}")
-        
-        finan_ink_maand = finan_ink/12
-        #st.write(f"Maandelijks komt dit uit op €{finan_ink_maand:.2f}")
+            finan_ink_maand = finan_ink/12
+            #st.write(f"Maandelijks komt dit uit op €{finan_ink_maand:.2f}")
         
         
     with column3:
-        st.subheader("Schulden")
-        
-        #lasten
-        schuld_1 = st.number_input('_Oplopende schuld 1 (bijv.rekening courant)_',value=0)
-        schuld_2 = st.number_input('_Oplopende schuld 2 (bijv. kredietlimiet)_',value=0)
-        schuld_3 = st.number_input('_Aflopende schuld (bijv. aflopend krediet)_',value=0)
-        schuld_4 = st.number_input(label='_Maandelijkse last studieschuld_',value=0)
-    # juiste factor/opslag op maandelijkse lasten studieschuld mbt tot debetrente    
-        if schuld_4 is not None:
-            factor_studieschuld = studieschuldtabel.loc[studieschuldtabel['Debetrente'] == debetrente,'Opslag'].values[0]
-            mnd_studieschuld = factor_studieschuld*schuld_4
-        else:
-            mnd_studieschuld = 0
-        tot_mnd_schuld = schuld_1*0.02 + schuld_2*0.02 + schuld_3 + mnd_studieschuld
-        
-        st.markdown(
-            """
-            <style>
-                .container-style {
-                    padding: 10px;
-                    border: 2px solid black;
-                    border-radius: 5px;
-                }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-        
-        # Inhoud van de container
-        st.write(f'<div class="container-style">De totale maandelijkse schuld is €{tot_mnd_schuld}</div>', unsafe_allow_html=True)
-    
-        st.write("---------------------------")
-    # annuïteitenfactor   
-        ann_bedrag = finan_ink_maand - tot_mnd_schuld
-        ann_rente = round(rentepercentage/100,3)
-        
-        ann_factor = annuiteitentabel.loc[annuiteitentabel['Rentepercentage'] == ann_rente, f'{tijdsperiode}'].values[0]
-        hypo_LTI = ann_factor*ann_bedrag
-        
-    # uiteindelijke button om te zien hoeveel er maximaal geleend kan worden.    
-    with column1:
-        st.subheader("_Resultaat_")
-        if st.checkbox("Max hypotheek (LTV)"):
-            st.write(f"U kunt maximaal €{waarde_woning} lenen.")
-        if st.checkbox("Max hypotheek (LTI)"):
-            st.write(f'U kunt maximaal €{hypo_LTI:.0f} lenen.')    
-        st.write("---------------------------")
-        if st.button("Conclusie"):
-            if hypo_LTI < waarde_woning and hypo_LTI > 0:
-                st.write(f"U kunt maximaal €{hypo_LTI:.0f} lenen.")
+        if bestand is not None:
+            st.subheader("Schulden")
+            
+            #lasten
+            schuld_1 = st.number_input('_Oplopende schuld 1 (bijv.rekening courant)_',value=0)
+            schuld_2 = st.number_input('_Oplopende schuld 2 (bijv. kredietlimiet)_',value=0)
+            schuld_3 = st.number_input('_Aflopende schuld (bijv. aflopend krediet)_',value=0)
+            schuld_4 = st.number_input(label='_Maandelijkse last studieschuld_',value=0)
+        # juiste factor/opslag op maandelijkse lasten studieschuld mbt tot debetrente    
+            if schuld_4 is not None:
+                factor_studieschuld = studieschuldtabel.loc[studieschuldtabel['Debetrente'] == debetrente,'Opslag'].values[0]
+                mnd_studieschuld = factor_studieschuld*schuld_4
             else:
-                st.write(f"U kunt maximaal 100% van de waarde\n van de woning lenen, t.w.v. €{waarde_woning}")
+                mnd_studieschuld = 0
+            tot_mnd_schuld = schuld_1*0.02 + schuld_2*0.02 + schuld_3 + mnd_studieschuld
+            
+            st.markdown(
+                """
+                <style>
+                    .container-style {
+                        padding: 10px;
+                        border: 2px solid black;
+                        border-radius: 5px;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # Inhoud van de container
+            st.write(f'<div class="container-style">De totale maandelijkse schuld is €{tot_mnd_schuld}</div>', unsafe_allow_html=True)
+        
+            st.write("---------------------------")
+        # annuïteitenfactor   
+            ann_bedrag = finan_ink_maand - tot_mnd_schuld
+            ann_rente = round(rentepercentage/100,3)
+            
+            ann_factor = annuiteitentabel.loc[annuiteitentabel['Rentepercentage'] == ann_rente, f'{tijdsperiode}'].values[0]
+            hypo_LTI = ann_factor*ann_bedrag
+            
+        # uiteindelijke button om te zien hoeveel er maximaal geleend kan worden.    
+    with column1:
+        if bestand is not None:
+            st.subheader("_Resultaat_")
+            if st.checkbox("Max hypotheek (LTV)"):
+                st.write(f"U kunt maximaal €{waarde_woning} lenen.")
+            if st.checkbox("Max hypotheek (LTI)"):
+                st.write(f'U kunt maximaal €{hypo_LTI:.0f} lenen.')    
+            st.write("---------------------------")
+            if st.button("Conclusie"):
+                if hypo_LTI < waarde_woning and hypo_LTI > 0:
+                    st.write(f"U kunt maximaal €{hypo_LTI:.0f} lenen.")
+                else:
+                    st.write(f"U kunt maximaal 100% van de waarde\n van de woning lenen, t.w.v. €{waarde_woning}")
 
 
 with tab2:
